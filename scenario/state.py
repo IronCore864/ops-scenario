@@ -142,79 +142,6 @@ class _DCBase:
 
 
 @dataclasses.dataclass(frozen=True)
-class CloudCredential:
-    auth_type: str
-    """Authentication type."""
-
-    attributes: Dict[str, str] = dataclasses.field(default_factory=dict)
-    """A dictionary containing cloud credentials.
-
-    For example, for AWS, it contains `access-key` and `secret-key`;
-    for Azure, `application-id`, `application-password` and `subscription-id`
-    can be found here.
-    """
-
-    redacted: List[str] = dataclasses.field(default_factory=list)
-    """A list of redacted secrets."""
-
-    def to_ops_cloud_credential(self):
-        return ops.CloudCredential(
-            auth_type=self.auth_type,
-            attributes=self.attributes,
-            redacted=self.redacted,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class CloudSpec:
-    type: str
-    """Type of the cloud."""
-
-    name: str = "localhost"
-    """Juju cloud name."""
-
-    region: Optional[str] = None
-    """Region of the cloud."""
-
-    endpoint: Optional[str] = None
-    """Endpoint of the cloud."""
-
-    identity_endpoint: Optional[str] = None
-    """Identity endpoint of the cloud."""
-
-    storage_endpoint: Optional[str] = None
-    """Storage endpoint of the cloud."""
-
-    credential: Optional[CloudCredential] = None
-    """Cloud credentials with key-value attributes."""
-
-    ca_certificates: List[str] = dataclasses.field(default_factory=list)
-    """A list of CA certificates."""
-
-    skip_tls_verify: bool = False
-    """Whether to skip TLS verfication."""
-
-    is_controller_cloud: bool = False
-    """If this is the cloud used by the controller."""
-
-    def to_ops_cloud_spec(self) -> ops.CloudSpec:
-        return ops.CloudSpec(
-            type=self.type,
-            name=self.name,
-            region=self.region,
-            endpoint=self.endpoint,
-            identity_endpoint=self.identity_endpoint,
-            storage_endpoint=self.storage_endpoint,
-            credential=None
-            if not self.credential
-            else self.credential.to_ops_cloud_credential(),
-            ca_certificates=self.ca_certificates,
-            skip_tls_verify=self.skip_tls_verify,
-            is_controller_cloud=self.is_controller_cloud,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
 class Secret(_DCBase):
     id: str
     # CAUTION: ops-created Secrets (via .add_secret()) will have a canonicalized
@@ -993,7 +920,7 @@ class State(_DCBase):
     """Status of the unit."""
     workload_version: str = ""
     """Workload version."""
-    cloud_spec: Optional[CloudSpec] = None
+    cloud_spec: Optional[ops.CloudSpec] = None
     """Cloud specification information (metadata) including credentials."""
 
     def __post_init__(self):
